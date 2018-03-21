@@ -1,0 +1,99 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Focus : MonoBehaviour  {
+
+	public GameObject RotPoint;
+	public GameObject LastCamPoint;
+
+	public float distance = 100f;
+
+	public float speedX = 30f;
+	public float speedY = 30f;
+	public float minLimitY = 5f;
+	public float maxLimitY = 180f;
+
+	public float mX = 0f;
+	public float mY = 20f;
+
+	public float maxDistance = 100f;
+	public float minDistance = 1.5f;
+
+	private float zoomSpeed = 2f;
+	public bool isNeedDamping = false;
+
+	public float damping = 2.5f;
+
+	private bool running;
+	private bool isActive;
+
+	private Main MainS;
+
+	// Use this for initialization
+	void Start () {
+		MainS = this.gameObject.GetComponent<Main> ();
+		//mX = transform.eulerAngles.x;
+		running=false;
+		isActive = false;
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		if (!isActive)
+			return;
+		RunFocus ();
+	}
+
+	public void FocusOn(Vector3 BuildingPosition){
+		RotPoint.transform.position = BuildingPosition;
+		LastCamPoint.transform.position = new Vector3 
+			(RotPoint.transform.position.x, 155f, RotPoint.transform.position.z - 215f);
+		running = true;
+		isActive = true;
+	}
+
+	public void FocusOff(){
+		mX = 0;
+		mY = 20f;
+		running = false;
+	}
+
+	private void RunFocus(){
+		if (running) {
+			if (Input.GetMouseButton (0)) {
+				mX += Input.GetAxis ("Mouse X") * speedX * Time.deltaTime;
+				mY -= Input.GetAxis ("Mouse Y") * speedX * Time.deltaTime;
+				//用来限定x轴旋转角度
+				mY = Mathf.Clamp (mY, 20f, 30f);
+			}
+			distance -= Input.GetAxis ("Mouse ScrollWheel") * zoomSpeed;
+			distance = Mathf.Clamp (distance, minDistance, maxDistance);
+
+			Quaternion mRotation = Quaternion.Euler (mY, mX, 0);
+			Vector3 mPosition = mRotation * new Vector3 (0, 0, -distance)
+			                    + RotPoint.transform.position;
+			//是否平滑过渡
+			if (isNeedDamping) {
+				transform.rotation = Quaternion.Lerp 
+					(transform.rotation, mRotation, Time.deltaTime * damping);
+				transform.position = Vector3.Lerp 
+					(transform.position, mPosition, Time.deltaTime * damping);
+			} else {
+				transform.rotation = mRotation;
+				transform.position = mPosition;
+			}
+		} else {
+			transform.rotation = Quaternion.Slerp (transform.rotation
+				, LastCamPoint.transform.rotation, Time.deltaTime * 3f);
+			transform.position += (LastCamPoint.transform.position 
+				- transform.position) / 15f;
+			if (Vector3.Distance(this.transform.position
+				,LastCamPoint.transform.position)<=0.1f) {
+				running = false;
+				isActive = false;
+				MainS.BackFromFocus ();
+			}
+		}
+	}
+}
