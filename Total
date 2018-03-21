@@ -1,0 +1,180 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Total : MonoBehaviour  {
+
+	public GameObject lastCamPosition;
+	private bool BackFromFocus=true;
+	//摄像机距离
+	public float distance=10f;
+	public float scaleFactor=10f;
+	//缩放系数
+	public float maxDistance=30f;
+	public float minDistance=5f;
+	//记录上一次手机触摸位置判断用户实做放大还是缩小手势
+	private Vector2 oldPosition1;
+	private Vector2 oldPosition2;
+
+	private Vector2 lastSingleTouchPosition;
+
+	private Vector3 m_CameraOffset;
+	private Camera m_Camera;
+
+	public bool useMouse=true;
+	//定义摄像机可以活动的范围
+	public float xMin = -970f;
+	public float xMax = -40f;
+	public float zMin = 350f;
+	public float zMax = 970f;
+	//这个变量用来记录单双指的变换
+	private bool m_isSingleFinger;
+
+	public float MoveSpeed = 400f;
+
+	private Vector3 downMousePosition;
+	private Vector3 upMousePosition;
+
+	private string thisFace;
+	private bool isActive;
+
+	private Main MainS;
+	private Menu MenuS;
+
+	// Use this for initialization
+	void Start () {
+		lastCamPosition.transform.position = this.transform.position;
+		MainS = this.gameObject.GetComponent<Main> ();
+		MenuS = this.gameObject.GetComponent<Menu> ();
+		m_Camera = this.GetComponent<Camera> ();
+		m_CameraOffset = m_Camera.transform.position;
+		isActive = true;
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		if (!isActive)
+			return;
+		ToFoucus ();
+		if (!isActive)
+			return;
+		RunTotal ();
+		//AfterTotal ();
+	}
+
+	public void TotalOn(){
+		isActive = true;
+	}
+
+	public void TotalOff(){
+		isActive = false;
+	}
+
+	private void RunTotal(){
+		/*
+		//判断触摸数量为单点触摸
+		if (Input.touchCount == 1) {
+			if (Input.GetTouch (0).phase == TouchPhase.Began || !m_isSingleFinger) {
+				//在开始触摸或者从两字手指放开回来的时候记录一下触摸位置
+				lastSingleTouchPosition = Input.GetTouch (0).position;
+			}
+			if (Input.GetTouch (0).phase == TouchPhase.Moved) {
+				MoveCamera (Input.GetTouch (0).position);
+			}
+			m_isSingleFinger = true;
+		} else if (Input.touchCount > 1) {
+			//当从单指触摸进入多指触摸的时候，记录一下触摸的位置
+			//保证计算缩放都是从两只手指触碰开始的
+			if(m_isSingleFinger){
+				oldPosition1 = Input.GetTouch (0).position;
+				oldPosition2 = Input.GetTouch (1).position;
+			}
+			if (Input.GetTouch (0).phase == TouchPhase.Moved 
+				|| Input.GetTouch (1).phase == TouchPhase.Moved) {
+				ScaleCamera ();
+			}
+			m_isSingleFinger = false;
+		}
+		//用鼠标的
+		*/
+		if(useMouse){
+			if (Input.GetMouseButton (0)) {
+				float x = Input.GetAxis ("Mouse X") * Time.deltaTime * MoveSpeed;
+				float z = Input.GetAxis ("Mouse Y") * Time.deltaTime * MoveSpeed;
+				lastCamPosition.transform.position += new Vector3 (-x, 0, -z);
+				lastCamPosition.transform.position = new Vector3 (
+					Mathf.Clamp (lastCamPosition.transform.position.x, xMin, xMax), 
+					lastCamPosition.transform.position.y, 
+					Mathf.Clamp (lastCamPosition.transform.position.z, zMin, zMax)); 
+				this.transform.position = lastCamPosition.transform.position;
+			}
+		}
+	}
+
+	private void AfterTotal(){
+		if (BackFromFocus) {
+			m_CameraOffset = this.transform.position - m_Camera.transform.forward * -distance;
+			BackFromFocus = false;
+		}
+		var position = m_CameraOffset + m_Camera.transform.forward * -distance;
+		m_Camera.transform.position = position;
+	}
+
+	//触摸缩放摄像头
+	private void ScaleCamera(){
+		//计算出当前两点触摸点的位置
+		var tempPosition1 = Input.GetTouch (0).position;
+		var tempPosition2 = Input.GetTouch (1).position;
+
+		float currentTouchDistance = Vector3.Distance (tempPosition1, tempPosition2);
+		float lastTouchDistance = Vector3.Distance (oldPosition1, oldPosition2);
+		//计算上次和这次双指触摸之间的距离差距
+		//然后去更改摄像机的距离
+		distance-=(currentTouchDistance-lastTouchDistance)*scaleFactor*Time.deltaTime;
+		//把距离限制住在min和max之间
+		distance=Mathf.Clamp(distance,minDistance,maxDistance);
+		//备份上一次触摸点的位置，用于对比
+		oldPosition1=tempPosition1;
+		oldPosition2 = tempPosition2;
+	}
+
+	private void MoveCamera(Vector3 scenePos){
+		Vector3 lastTouchPosition = m_Camera.ScreenToWorldPoint 
+			(new Vector3 (lastSingleTouchPosition.x, lastSingleTouchPosition.y, -1));
+		Vector3 currentTouchPosition = m_Camera.ScreenToWorldPoint 
+			(new Vector3 (scenePos.x, scenePos.y, -1));
+		Vector3 v = currentTouchPosition - lastTouchPosition;
+		m_CameraOffset += new Vector3 (v.x, 0, v.z) * m_Camera.transform.position.y;
+		//把摄像机的位置控制在范围内
+		m_CameraOffset=new Vector3(Mathf.Clamp(m_CameraOffset.x,xMin,xMax)
+			,m_CameraOffset.y,Mathf.Clamp(m_CameraOffset.z,zMin,zMax));
+		//Debug.Log (lastTouchPosition + "|" + currentTouchPosition + "|" + v);
+		lastSingleTouchPosition=scenePos;
+	}
+
+	private void ToFoucus(){
+		
+		if (Input.GetMouseButtonDown (0)) {
+			downMousePosition = Input.mousePosition;
+		}
+			
+		if (Input.GetMouseButtonUp (0)) {
+			upMousePosition = Input.mousePosition;
+		}
+		if (Vector3.Distance (downMousePosition, upMousePosition) < 0.1f) {
+			upMousePosition += Vector3.one;
+			//创建一个射线，该射线从主摄像机中出发
+			Ray ray=Camera.main.ScreenPointToRay(Input.mousePosition);
+			//创建一个射线信息集
+			RaycastHit hit;
+			if (Physics.Raycast (ray, out hit)) {
+				if (hit.transform.tag == "Building") {
+					BackFromFocus = true;
+					isActive = false;
+					MainS.FocusOnBuilding (hit.transform.name);
+				}
+			}
+		}
+	}
+}
+
