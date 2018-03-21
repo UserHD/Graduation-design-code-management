@@ -1,0 +1,69 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine;
+
+public class Main : MonoBehaviour {
+
+	public GameObject[] Building;
+	private Vector3 buildingPosition;
+
+	private Focus FocusS;
+	private Total TotalS;
+	private Menu MenuS;
+
+	// Use this for initialization
+	void Start () {
+		FocusS = this.gameObject.GetComponent<Focus> ();
+		TotalS = this.gameObject.GetComponent<Total> ();
+		MenuS = this.gameObject.GetComponent<Menu> ();
+		Initial ();
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+	//初始化所有元素
+	public void Initial(){
+		FocusS.FocusOff ();
+		TotalS.TotalOn ();
+		MenuS.ShowMenu ();
+	}
+	public void FocusOnBuilding(string BuildingName){
+		TotalS.TotalOff ();
+		FocusS.FocusOn (CheckBuilding (BuildingName));
+		MenuS.FocusOnBuilding (CHeckBuildingDetail (BuildingName));
+	}
+
+	public void CloseFocus(){
+		FocusS.FocusOff ();
+	}
+
+	public void BackFromFocus(){
+		MenuS.BackFromFocus ();
+		TotalS.TotalOn ();
+	}
+
+	public void BackToTotal(){
+	
+	}
+
+	private Vector3 CheckBuilding(string BuildingName){
+		foreach (GameObject buildingPosition in Building) {
+			if (BuildingName == buildingPosition.name) {
+				return(buildingPosition.transform.position);
+			}
+		}
+		return Vector3.zero;
+	}
+
+	private int CHeckBuildingDetail(string BuildingName){
+		for (int num = 0; num < Building.Length; num++) {
+			if (BuildingName == Building [num].name) {
+				return num;
+			}
+		}
+		return 0;
+	}
+}
