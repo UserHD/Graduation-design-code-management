@@ -1,0 +1,26 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine;
+
+public class FocusOnBuilding : MonoBehaviour {
+
+	public string BuildingName;
+	private Button Building;
+	public Main Mains;
+
+	// Use this for initialization
+	void Start () {
+		Building = this.gameObject.GetComponent<Button> ();
+		Building.onClick.AddListener (FocusToMain);
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+	private void FocusToMain(){
+		Mains.FocusOnBuilding (BuildingName);
+	}
+}
