@@ -1,0 +1,124 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine;
+
+public class Menu : MonoBehaviour  {
+
+	public bool focus;
+	public bool ShopShown;
+
+	public GameObject UIBox;
+	public GameObject BuildingIcon;
+	public GameObject BuildingMenu;
+	public GameObject ShopIcon;
+	public Button TotalBtn;
+	public Button TotalWithTagBtn;
+	public Button BuildingBtn;
+	public Button ShopBtn;
+	public Button MenuBtn;
+	public GameObject Detail;
+	public Text BuildingNO;
+	public Text BuildingName;
+	public Text BuildingDetail;
+	private string[] FocusNO;
+	private string[] FocusName;
+	private string[] FocusDetail;
+
+	private bool isActive;
+
+	private Main MainS;
+
+	// Use this for initialization
+	void Start () {
+		MainS = this.gameObject.GetComponent<Main> ();
+		focus = false;
+		isActive = true;
+		TotalBtn.onClick.AddListener (ShowBuildingIcon);
+		TotalWithTagBtn.onClick.AddListener (HideBuildingIcon);
+		BuildingBtn.onClick.AddListener (ShowBuildingMenu);
+		ShopBtn.onClick.AddListener (ShowShop);
+		MenuBtn.onClick.AddListener (BackToMenu);
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+	private void ShowBuildingIcon(){
+		HideIcon ();
+		ShopShown = false;
+		BuildingIcon.gameObject.SetActive (true);
+		TotalBtn.gameObject.SetActive (false);
+		TotalWithTagBtn.gameObject.SetActive (true);
+	}
+
+	private void HideBuildingIcon(){
+		HideIcon ();
+		BuildingIcon.gameObject.SetActive (false);
+		TotalWithTagBtn.gameObject.SetActive (false);
+		TotalBtn.gameObject.SetActive (true);
+	}
+
+	private void ShowBuildingMenu(){
+		HideMenu ();
+		BuildingMenu.gameObject.SetActive (true);
+	}
+
+	private void ShowShop(){
+		if (!ShopShown) {
+			HideIcon ();
+			HideBuildingIcon ();
+			ShopIcon.gameObject.SetActive (true);
+			ShopShown = true;
+			return;
+		}
+		ShopIcon.gameObject.SetActive (false);
+		ShopShown = false;
+	}
+
+	private void BackToMenu(){
+		if (focus) {
+			HideDetail ();
+			MainS.CloseFocus ();
+		} else {
+			ShowMenu ();
+		}
+	}
+
+	public void ShowMenu(){
+		UIBox.gameObject.SetActive (true);
+		BuildingMenu.SetActive (false);
+		MenuBtn.gameObject.SetActive (false);
+	}
+
+	public void HideMenu(){
+		UIBox.gameObject.SetActive (false);
+		BuildingMenu.SetActive (false);
+		MenuBtn.gameObject.SetActive (true);
+	}
+
+	public void FocusOnBuilding(int BuildingNumber){
+		ShowDetail ();
+		HideMenu ();
+		focus = true;
+	}
+
+	public void BackFromFocus(){
+		ShowMenu ();
+		focus = false;
+	}
+
+	private void HideIcon(){
+		ShopIcon.gameObject.SetActive (false);
+	}
+
+	private void ShowDetail(){
+		Detail.gameObject.SetActive (true);
+	}
+
+	private void HideDetail(){
+		Detail.gameObject.SetActive (false);
+	}
+}
